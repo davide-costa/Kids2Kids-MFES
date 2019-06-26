@@ -1,0 +1,69 @@
+class Product
+
+types
+	public ProductState = <OnStore> | <Sold>;
+
+instance variables
+	protected static currIdCounter: int := 1;
+	protected productState : ProductState := <OnStore>;
+	protected id:int;
+	protected name:seq of (char);
+	protected description:seq of (char);
+	protected buyPrice:real;
+	protected salePrice:real;
+	protected color:seq of (char);
+
+  
+    operations
+    
+    public getId: () ==> int
+			getId() == 
+				return id;
+			
+			
+		public getName: () ==> seq of char
+			getName() == 
+				return name;	
+				
+				
+		public getDescription: () ==> seq of char
+			getDescription() == 
+				return description;
+			
+			
+		public getColor: () ==> seq of char
+			getColor() == 
+				return color;
+
+
+		public getBuyValue: () ==> real
+			getBuyValue() == 
+				return buyPrice;
+			
+			
+		public getSaleValue: () ==> real
+			getSaleValue() == 
+				return salePrice;	
+				
+				
+		public setStateAsOnStore: () ==> ()
+			setStateAsOnStore() == 
+				productState := <OnStore>;
+
+
+		public pure isOnStateOnStore: () ==> bool
+			isOnStateOnStore() == 
+				return productState = <OnStore>;
+
+
+		public setStateAsSold: () ==> ()
+			setStateAsSold() == 
+				productState := <Sold>;
+			
+				
+		public pure isOnStateSold: () ==> bool
+			isOnStateSold() == 
+				return productState = <Sold>;
+  
+
+end Product

@@ -1,0 +1,18 @@
+class Gear is subclass of Product
+  
+operations
+    public Gear : seq of char * seq of char * real * real * seq of char==> Gear
+		Gear(productName, productDescription, productbuyPrice, productSalePrice, productColor) == (
+			id := currIdCounter;
+			currIdCounter := currIdCounter + 1;
+			name := productName;
+			description := productDescription;
+			buyPrice := productbuyPrice;
+			salePrice := productSalePrice;
+			color := productColor;
+			return self
+		)
+		pre (len productName) > 0 and (len productDescription) > 0 
+			and productSalePrice > productbuyPrice and (len productColor > 0);
+			
+end Gear

@@ -1,0 +1,34 @@
+class Employee is subclass of Person
+					 
+instance variables
+	employmentDate: Date;
+ 	store : Store;
+	salary: real;
+
+  
+operations
+  public Employee : seq of char * seq of char * real * Date * Store ==> Employee
+		Employee(employeeName, employeeNIF, employeeSalary, employeeEmploymentDate, employeeStore) == (
+			id := currIdCounter;
+			currIdCounter := currIdCounter + 1;
+			name := employeeName;
+			nif := employeeNIF;
+			salary := employeeSalary;
+			employmentDate := employeeEmploymentDate;
+			store := employeeStore;
+			return self
+		)
+		pre (len employeeName > 0) and (len employeeNIF > 0) and employeeEmploymentDate <> undefined 
+			and employeeStore <> undefined and employeeSalary > 0.0;
+		
+		
+	public pure getEmploymentDate: () ==> Date
+		getEmploymentDate () ==
+			return employmentDate;
+
+
+	public getSalary: () ==> real
+		getSalary () ==
+			return salary;
+
+end Employee

@@ -1,0 +1,623 @@
+class Kids2Kids
+	
+instance variables
+
+  stores: set of Store := {};
+  buyTransactions: set of BuyTransaction := {};
+  saleTransactions: set of SaleTransaction := {};
+  customers: set of Customer := {};
+  
+  inv (card customers) > 0 => (card stores) > 0;
+  inv ((card buyTransactions) > 0 or (card saleTransactions) > 0) => ((card stores) > 0 and (card customers) > 0);
+  inv (card saleTransactions) > 0 => (card buyTransactions) > 0;
+  
+  
+  operations
+  	public Kids2Kids: () ==> Kids2Kids
+		Kids2Kids() == 
+		(
+			return self
+		);
+  
+  
+  public getBuyTransactions: () ==> set of BuyTransaction
+		getBuyTransactions () ==
+			return buyTransactions;
+			
+
+	public getSaleTransactions: () ==> set of SaleTransaction
+		getSaleTransactions () ==
+			return saleTransactions;
+			
+		
+  public getStores: () ==> set of Store
+		getStores () ==
+			return stores;
+			
+	-- This method allows to add a product to the Kids2Kids company (this implies registering a buy transaction). 
+	-- The created buyTransaction is returned 
+	public addBuyTransaction: Employee * Person * Store * set of Product * Date ==> BuyTransaction
+		addBuyTransaction(employee, customer, store, setProducts, date) == 
+		(
+			--for post condition verification
+			dcl customerCurrentDiscountsValue: real := customer.getDiscountsValue();
+				
+			dcl productsValue: real;
+			dcl buyTransaction: BuyTransaction;
+			setProductsStateAsInStore(setProducts);
+			buyTransaction := new BuyTransaction(employee, customer, store, setProducts, date);
+			buyTransactions := buyTransactions union {buyTransaction};
+			productsValue := buyTransaction.getTotalValue();
+			store.addProducts(setProducts);
+			customer.incrementDiscountsValue(productsValue);
+			
+			-- manual post-condition checking (not supported otherwise)
+			Utils`assertTrue(customer.getDiscountsValue() = customerCurrentDiscountsValue + productsValue);
+				
+			return buyTransaction
+		)
+			pre (employee <> undefined) and (customer <> undefined) and (store <> undefined)
+				and ((card setProducts) > 0)
+				and ({employee} inter store.getEmployees()) = {employee}
+				and date.isHigher(employee.getEmploymentDate())
+				and store.canHandleNewProducts(setProducts)
+			post (card buyTransactions~ + 1) = card buyTransactions
+				and checkAllProductsHaveOnStoreState(setProducts) 
+				and checkAllProductsHaveExpectedStore(store, setProducts);
+
+
+		-- This method allows to sell a product to a customer (this implies registering a sale transaction). 
+		-- The created saleTransaction is returned 	
+		public addSaleTransaction: Employee * Person * Store * set of Product * Date * real ==> SaleTransaction
+			addSaleTransaction(employee, customer, store, setProducts, date, valueToDiscount) == 
+			(
+				--for post condition verification
+				dcl customerCurrentDiscountsValue: real := customer.getDiscountsValue();
+			
+				dcl productsValue: real;
+				dcl saleTransaction: SaleTransaction;
+				setProductsStateAsSold(setProducts);
+				saleTransaction := new SaleTransaction(employee, customer, store, setProducts, date);
+				saleTransactions := saleTransactions union {saleTransaction};
+				productsValue := saleTransaction.getTotalValue();
+				store.setProductsSetAsSold(setProducts);
+				customer.decrementDiscountsValue(valueToDiscount);
+				
+				-- manual post-condition checking (not supported otherwise)
+				Utils`assertTrue(customer.getDiscountsValue() = customerCurrentDiscountsValue - valueToDiscount);
+				
+				return saleTransaction
+			)
+			pre (employee <> undefined) and (customer <> undefined) and (store <> undefined)
+				and ((card setProducts) > 0) 
+				and setProducts inter store.getProductsInStock() = setProducts
+				and valueToDiscount >= 0
+				and valueToDiscount <= customer.getDiscountsValue()
+				and ({store} inter stores) = {store}
+				and ({employee} inter store.getEmployees()) = {employee}
+				and ( ({customer} inter customers) = {customer} or ({customer} inter getAllEmployees()) = {customer} )
+				and date.isHigher(employee.getEmploymentDate())
+			post (card saleTransactions~ + 1) = card saleTransactions
+				and checkAllProductsHaveSoldState(setProducts);
+			
+			
+		public pure getAllEmployees: () ==> set of Employee
+			getAllEmployees() ==
+			(
+				dcl employeesSet: set of Employee := {};
+				for all store in set stores do
+					employeesSet := employeesSet union store.getEmployees();
+					
+				return employeesSet;
+			 );
+
+		--sets the state of all the products in the set received as parameter as inStore
+		public setProductsStateAsInStore: set of Product ==> ()
+			setProductsStateAsInStore(setProducts) ==
+			(
+				for all product in set setProducts
+					do product.setStateAsOnStore();
+			 )
+			pre setProducts <> undefined
+			post checkAllProductsHaveOnStoreState(setProducts);
+
+		--sets the state of all the products in the set received as parameter as sold
+		public setProductsStateAsSold: set of Product ==> ()
+		setProductsStateAsSold(setProducts) ==
+			for all product in set setProducts
+				do product.setStateAsSold()
+			pre setProducts <> undefined
+			post checkAllProductsHaveSoldState(setProducts);
+			
+		-- Both in stock and already sold products are returned.	
+		public getAllProductsFromAllStores: () ==> set of Product
+			getAllProductsFromAllStores () ==
+			(
+				dcl productsSet: set of Product := {};
+				for all store in set stores
+					do 
+					(
+						productsSet := productsSet union store.getProducts();
+					);	
+					
+				return productsSet;
+			);
+			
+			
+		public getAllProductsInStockFromAllStores: () ==> set of Product
+			getAllProductsInStockFromAllStores () ==
+			(
+				dcl productsSet: set of Product := {};
+				for all store in set stores
+					do (productsSet := productsSet union store.getProductsInStock());
+			
+				return productsSet;
+			);
+			
+			
+		--Returns all products of all stores
+		public getAllProductsSoldFromAllStores: () ==> set of Product
+			getAllProductsSoldFromAllStores () ==
+			(
+				dcl productsSet: set of Product := {};
+				for all store in set stores
+					do (productsSet := productsSet union store.getAllSoldProducts());
+			
+				return productsSet;
+			);	
+			
+		--Adds a store to the set of stores of this class
+		public addStore: int * seq of char ==> Store
+			addStore(capacity, location) == 
+			(
+				dcl store: Store;
+				store := new Store(capacity, location);
+				stores := stores union {store};
+				
+				return store;
+			)
+			pre capacity > 0 and ((len location) > 0)
+			post (card stores~ + 1) = card stores;
+			 	 		 	
+			 	 		 	
+		--Adds a customer to the set of customers of this class
+		public addCustomer: seq of char * seq of char ==> Customer
+			addCustomer(customerName, customerNIF) == 
+			(
+				dcl customer: Customer;
+				customer := new Customer(customerName, customerNIF);
+				customers := customers union {customer};
+				
+				return customer;
+			)
+			pre ((len customerName) > 0) and ((len customerNIF) = 9) and (IsNifAlreadyExistent(customerNIF) = false)
+			post card customers~ + 1 = card customers;
+			
+		-- Checks if the given nif is already associated to a person of the system (i.e. customer or employee)
+		public pure IsNifAlreadyExistent: seq of char ==> bool
+			IsNifAlreadyExistent(nif) ==
+			(
+					for all customer in set customers
+					do 
+						(
+							if(customer.getNIF() = nif)
+								then return true;
+						);
+							
+				return false;		
+			)
+			pre (len nif) > 0 ;	
+			
+		--Returns the set of customers of this class
+		public getCustomers: () ==> set of Customer
+			getCustomers() ==
+			(
+				return customers;
+			);
+		
+		
+		public getProductsInStockOfClassCloth: () ==> set of Product
+			getProductsInStockOfClassCloth() ==
+			(
+				dcl products: set of Product := {};
+				for all store in set stores do
+				(
+					for all product in set store.getProducts() do
+						(
+							if (isofclass(Cloth, product) and product.isOnStateOnStore()) then
+									products := products union {product}
+						);
+				);
+				return products
+			);
+			
+		public getAmountOfProductsInStockOfClassCloth: () ==> int
+			getAmountOfProductsInStockOfClassCloth() ==
+			(
+				return (card getProductsInStockOfClassCloth());
+			);
+			
+			
+		public getSoldProductsOfClassCloth: () ==> set of Product
+			getSoldProductsOfClassCloth() ==
+			(
+				dcl products: set of Product := {};
+				for all store in set stores do
+				(
+					for all product in set store.getProducts() do
+						(
+							if (isofclass(Cloth, product) and product.isOnStateSold()) then
+									products := products union {product}
+						);
+				);
+				return products
+			);
+				
+		public getAmountOfSoldProductsOfClassCloth: () ==> int
+			getAmountOfSoldProductsOfClassCloth() ==
+			(
+				return (card getSoldProductsOfClassCloth());
+			);
+								
+		public getAllProductsOfClassCloth: () ==> set of Product
+			getAllProductsOfClassCloth() ==
+			(
+				dcl products: set of Product := {};
+				for all store in set stores do
+				(
+					for all product in set store.getProducts() do
+						(
+							if (isofclass(Cloth, product)) then
+									products := products union {product}
+						);
+				);
+				return products
+			);
+				
+		public getAmountOfAllProductsOfClassCloth: () ==> int
+			getAmountOfAllProductsOfClassCloth() ==
+			(
+				return (card getAllProductsOfClassCloth());
+			);
+					
+		public getProductsInStockOfClassToy: () ==> set of Product
+			getProductsInStockOfClassToy() ==
+			(
+				dcl products: set of Product := {};
+				for all store in set stores do
+				(
+					for all product in set store.getProducts() do
+						(
+						if (isofclass(Toy, product) and product.isOnStateOnStore()) then
+								products := products union {product}
+						);
+				);
+				return products
+			);
+			
+		public getAmountOfProductsInStockOfClassToy: () ==> int
+			getAmountOfProductsInStockOfClassToy() ==
+			(
+				return (card getProductsInStockOfClassToy());
+			);
+			
+			
+			public getSoldProductsOfClassToy: () ==> set of Product
+			getSoldProductsOfClassToy() ==
+			(
+				dcl products: set of Product := {};
+				for all store in set stores do
+				(
+					for all product in set store.getProducts() do
+						(
+						if (isofclass(Toy, product) and product.isOnStateSold()) then
+								products := products union {product}
+						);
+				);
+				return products
+			);
+					
+		public getAmountOfSoldProductsOfClassToy: () ==> int
+			getAmountOfSoldProductsOfClassToy() ==
+			(
+				return (card getSoldProductsOfClassToy());
+			);
+			
+		public getAllProductsOfClassToy: () ==> set of Product
+			getAllProductsOfClassToy() ==
+			(
+				dcl products: set of Product := {};
+				for all store in set stores do
+				(
+					for all product in set store.getProducts() do
+						(
+						if (isofclass(Toy, product)) then
+								products := products union {product}
+						);
+				);
+				return products
+			);
+					
+		public getAmountOfAllProductsOfClassToy: () ==> int
+			getAmountOfAllProductsOfClassToy() ==
+			(
+				return (card getAllProductsOfClassToy());
+			);			
+				
+			
+		public getProductsInStockOfClassGear: () ==> set of Product
+			getProductsInStockOfClassGear() ==
+			(
+				dcl products: set of Product := {};
+				for all store in set stores do
+				(
+					for all product in set store.getProducts() do
+						(
+						if (isofclass(Gear, product) and product.isOnStateOnStore()) then
+								products := products union {product}
+						);
+				);
+				return products
+			);
+						
+		public getAmountOfProductsInStockOfClassGear: () ==> int
+			getAmountOfProductsInStockOfClassGear() ==
+			(
+				return (card getProductsInStockOfClassGear());
+			);
+			
+			
+		public getSoldProductsOfClassGear: () ==> set of Product
+			getSoldProductsOfClassGear() ==
+			(
+				dcl products: set of Product := {};
+				for all store in set stores do
+				(
+					for all product in set store.getProducts() do
+						(
+						if (isofclass(Gear, product) and product.isOnStateSold()) then
+								products := products union {product}
+						);
+				);
+				return products
+			);			
+						
+		public getAmountOfSoldProductsOfClassGear: () ==> int
+			getAmountOfSoldProductsOfClassGear() ==
+			(
+				return (card getSoldProductsOfClassGear());
+			);
+			
+		public getAllProductsOfClassGear: () ==> set of Product
+			getAllProductsOfClassGear() ==
+			(
+				dcl products: set of Product := {};
+				for all store in set stores do
+				(
+					for all product in set store.getProducts() do
+						(
+						if (isofclass(Gear, product)) then
+								products := products union {product}
+						);
+				);
+				return products
+			);			
+						
+		public getAmountOfAllProductsOfClassGear: () ==> int
+			getAmountOfAllProductsOfClassGear() ==
+			(
+				return (card getAllProductsOfClassGear());
+			);
+			
+		-- This function calculates the best store of the given month and year, based on the number of products sold, and returns it. 	
+		-- The number of stores returned can be more than one in case of a tie (there are multiple stores with the same number of products sold and no store with more than those)
+		public getBestStoreOfMonthBySalesVolume: nat1 * nat1 ==> set of Store
+			getBestStoreOfMonthBySalesVolume(month, year) == 
+			(
+				dcl expectedDate: Date := new Date(1, month,  year);
+				dcl storeToSalesVolumeMap: map Store to int := {|->};
+				dcl currMaxSalesVolume: int := 0;
+				dcl storesWithMaxSalesVolume: set of Store := {};
+				
+				--fills the map with all stores with value 0 
+				for all store in set stores
+					do 
+						(
+							storeToSalesVolumeMap := storeToSalesVolumeMap ++ {store |-> 0};
+						);
+						
+					--fill map with current sales volume of each store
+					for all saleTransaction in set saleTransactions
+						do 
+							(
+								if(saleTransaction.getDate().isOfSameMonth(expectedDate))
+									then storeToSalesVolumeMap := Utils`incrementValueNumberIntegerOfGivenKeyStoreInstanceInMap(storeToSalesVolumeMap, saleTransaction.getStore(), saleTransaction.getNumberOfProducts());			
+							);	
+				
+			--get store(s) with max sales volume
+				for all store in set stores
+					do 
+						(
+								if(storeToSalesVolumeMap(store) > currMaxSalesVolume)
+									then 
+									(
+										currMaxSalesVolume := storeToSalesVolumeMap(store);
+										storesWithMaxSalesVolume := {store};
+									)
+									else if(storeToSalesVolumeMap(store) = currMaxSalesVolume)
+										then 
+										(
+											storesWithMaxSalesVolume := storesWithMaxSalesVolume union {store};
+										)		
+						);
+						
+						
+				return storesWithMaxSalesVolume;
+			)
+			pre month > 0 and month <= 12 and year > 0
+			post (card RESULT) > 0 and (card RESULT) <= (card stores);
+				
+
+		-- This function calculates the best store of the given month and year, based on the total earned value in products sold, and returns it. 	
+		-- The number of stores returned can be more than one in case of a tie (there are multiple stores with the same value in products sold and no store with more than those)
+		public getBestStoreOfMonthBySalesValue: nat1 * nat1 ==> set of Store
+			getBestStoreOfMonthBySalesValue(month, year) == 
+			(
+				dcl expectedDate: Date := new Date(1, month,  year);
+				dcl storeToSalesValueMap: map Store to real := {|->};
+				dcl currMaxSalesValue: real := 0;
+				dcl storesWithMaxSalesValue: set of Store := {};
+				
+				--fills the map with all stores with value 0 
+				for all store in set stores
+					do 
+						(
+							storeToSalesValueMap := storeToSalesValueMap ++ {store |-> 0.0};
+						);
+						
+					--fill map with current sales value of each store
+					for all saleTransaction in set saleTransactions
+						do 
+							(
+								if(saleTransaction.getDate().isOfSameMonth(expectedDate))
+									then storeToSalesValueMap := Utils`incrementValueNumberRealOfGivenKeyStoreInstanceInMap(storeToSalesValueMap, saleTransaction.getStore(), saleTransaction.getTotalValue());			
+							);	
+				
+			--get store(s) with max sales value
+				for all store in set stores
+					do 
+						(
+								if(storeToSalesValueMap(store) > currMaxSalesValue)
+									then 
+									(
+										currMaxSalesValue := storeToSalesValueMap(store);
+										storesWithMaxSalesValue := {store};
+									)
+									else if(storeToSalesValueMap(store) = currMaxSalesValue)
+										then 
+										(
+											storesWithMaxSalesValue := storesWithMaxSalesValue union {store};
+										)		
+						);
+						
+						
+				return storesWithMaxSalesValue;
+			)
+			pre month > 0 and month <= 12 and year > 0
+			post (card RESULT) > 0 and (card RESULT) <= (card stores);
+			
+		-- This function calculates the most sold class of products, based on the number of products sold of that class, and returns a string with it.
+		-- The number of classes returned can be more than one in case of a tie (there are multiple classes with the number of products sold and no class with more than those)
+		public getMostSoldProductClass: () ==> seq of char
+			getMostSoldProductClass () ==
+			(
+					dcl productClassToNumberOfSalesMap: map seq of char to int := {"Cloth" |-> 0, "Toy" |-> 0, "Gear" |-> 0};
+					dcl productsOfTransaction : set of Product := {};
+					dcl clothNumberSales : int;
+					dcl toyNumberSales : int;
+					dcl gearNumberSales : int;
+					
+					for all saleTransaction in set saleTransactions
+						do 
+							(
+									productsOfTransaction := saleTransaction.getProducts();
+									for all product in set productsOfTransaction
+									do 
+										(
+												if (isofclass(Cloth, product)) 
+													then productClassToNumberOfSalesMap := Utils`incrementValueNumberOfGivenKeyStringInMap(productClassToNumberOfSalesMap, "Cloth")
+												else if (isofclass(Toy, product)) 
+													then productClassToNumberOfSalesMap := Utils`incrementValueNumberOfGivenKeyStringInMap(productClassToNumberOfSalesMap, "Toy")
+												else if (isofclass(Gear, product)) 
+													then productClassToNumberOfSalesMap := Utils`incrementValueNumberOfGivenKeyStringInMap(productClassToNumberOfSalesMap, "Gear")
+										);
+							);
+							
+					clothNumberSales := productClassToNumberOfSalesMap("Cloth");
+					toyNumberSales := productClassToNumberOfSalesMap("Toy");
+					gearNumberSales := productClassToNumberOfSalesMap("Gear");
+					
+					if( clothNumberSales > toyNumberSales and clothNumberSales > gearNumberSales)
+						then return "Cloth"
+					else if( toyNumberSales > clothNumberSales and toyNumberSales > gearNumberSales)
+						then return "Toy"
+					else if( gearNumberSales > clothNumberSales and gearNumberSales > toyNumberSales)
+						then return "Gear"
+					else if( gearNumberSales = clothNumberSales and gearNumberSales <> toyNumberSales)
+						then return "Cloth and Gear"
+					else if( gearNumberSales = toyNumberSales and gearNumberSales <> clothNumberSales)
+						then return "Toys and Gear"	
+					else if( toyNumberSales = clothNumberSales and gearNumberSales <> clothNumberSales)
+						then return "Cloth and Toys"
+					else 
+						return "Cloth, Toys and Gear"
+			);
+				
+		-- Gets the employees that are also customers based on having buyTransactions or saleTransactions as a customer while being registered as an employee of a store at the same time.
+		public getEmployeesThatAreAlsoCustomers: () ==> set of Employee
+				getEmployeesThatAreAlsoCustomers() ==
+				(
+					dcl employees: set of Employee := {};
+					dcl employeesThatAreAlsoCustomers: set of Employee := {};
+					for all store in set stores do
+					(
+						employees := employees union store.getEmployees();
+					);
+					
+					for all employee in set employees do
+					(
+							for all buyTransaction in set buyTransactions do
+							(
+								if (buyTransaction.getCustomer().getId() = employee.getId() ) then
+									employeesThatAreAlsoCustomers := employeesThatAreAlsoCustomers union {employee};
+							);
+							
+							for all saleTransaction in set saleTransactions do
+							(
+								if (saleTransaction.getCustomer().getId() = employee.getId()) then
+									employeesThatAreAlsoCustomers := employeesThatAreAlsoCustomers union {employee};
+							);
+					);
+							
+					return employeesThatAreAlsoCustomers
+				);
+
+		--checks if the products of the store received as parameter has all of its products in OnStore state; returns true if yes and false otherwise
+		public pure checkAllProductsHaveOnStoreState: set of Product ==> bool
+			checkAllProductsHaveOnStoreState(products) ==
+			(
+						for all product in set products do
+						(
+							if (not product.isOnStateOnStore()) then
+									return false;
+						);
+						
+					return true;
+			);
+			
+		--checks if the products of the store received as parameter has all of its products in HaveSold state; returns true if yes and false otherwise
+		public pure checkAllProductsHaveSoldState: set of Product ==> bool
+			checkAllProductsHaveSoldState(setProducts) ==
+			(
+						for all product in set setProducts do
+						(
+							if (not product.isOnStateSold()) then
+									return false;
+						);
+						
+					return true;
+			)
+			pre setProducts <> undefined;
+
+
+		--checks if the products in the set received as second parameter belong to the store received as parameter and are in the set of products in stock of that same store
+		public pure checkAllProductsHaveExpectedStore: Store * set of Product ==> bool
+			checkAllProductsHaveExpectedStore(store, setProducts) ==
+			(
+				dcl contains: bool := setProducts subset store.getProductsInStock();
+				return contains;
+			)		
+			pre setProducts <> undefined;
+
+
+end Kids2Kids

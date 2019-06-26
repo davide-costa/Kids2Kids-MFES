@@ -1,0 +1,47 @@
+class Utils
+  
+  operations
+  
+	--increments the value in the map mapStoreToInteger by valueToIncrement which corresponds to the key store. this version is used for incrementing integer values mapped by instances of String class
+  	public static incrementValueNumberOfGivenKeyStringInMap: map seq of char to int * seq of char ==> map seq of char to int
+			incrementValueNumberOfGivenKeyStringInMap (mapStringToInt, string) ==
+			(
+					dcl currNumber: int := mapStringToInt(string);
+					dcl nextNumber: int := currNumber + 1;
+					return mapStringToInt ++ {string |-> nextNumber};
+			)
+				pre mapStringToInt <> undefined 
+					and (len string) > 0 
+					and string in set dom mapStringToInt;
+			
+	--increments the value in the map mapStoreToInteger by valueToIncrement which corresponds to the key store. this version is used for incrementing real values mapped by instances of Store class
+  	public static incrementValueNumberRealOfGivenKeyStoreInstanceInMap: map Store to real * Store * real ==> map Store to real
+			incrementValueNumberRealOfGivenKeyStoreInstanceInMap (mapStoreToReal, store, valueToIncrement) ==
+			(
+					dcl currNumber: real := mapStoreToReal(store);
+					dcl nextNumber: real := currNumber + valueToIncrement;
+					return mapStoreToReal ++ {store |-> nextNumber};
+			)
+				pre mapStoreToReal <> undefined and  store <> undefined 
+					and valueToIncrement > 0.0 
+					and store in set dom mapStoreToReal;
+
+	--increments the value in the map mapStoreToInteger by valueToIncrement which corresponds to the key store. this version is used for incrementing integer values mapped by instances of Store class
+  	public static incrementValueNumberIntegerOfGivenKeyStoreInstanceInMap: map Store to int * Store * int ==> map Store to int
+			incrementValueNumberIntegerOfGivenKeyStoreInstanceInMap (mapStoreToInteger, store, valueToIncrement) ==
+			(
+					dcl currNumber: int := mapStoreToInteger(store);
+					dcl nextNumber: int := currNumber + valueToIncrement;
+					return mapStoreToInteger ++ {store |-> nextNumber};
+			)
+				pre mapStoreToInteger <> undefined 
+					and store <> undefined 
+					and valueToIncrement > 0.0
+					and store in set dom mapStoreToInteger;
+				
+				
+			public static assertTrue: bool ==> ()
+        assertTrue(cond) == return
+        pre cond;
+
+end Utils

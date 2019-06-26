@@ -1,0 +1,15 @@
+class Customer is subclass of Person
+ 
+  operations
+  
+  	public Customer : seq of char * seq of char ==> Customer
+		Customer(customerName, customerNIF) == (
+			id := currIdCounter;
+			currIdCounter := currIdCounter + 1;
+			name := customerName;
+			nif := customerNIF;
+			return self
+		)
+		pre (len customerName > 0) and  (len customerNIF > 0);
+ 
+end Customer

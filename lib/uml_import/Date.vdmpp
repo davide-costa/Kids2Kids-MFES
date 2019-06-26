@@ -1,0 +1,76 @@
+class Date
+
+instance variables
+		year : nat1;
+		month: nat1;
+		day  : nat1;
+		
+		inv month <= 12 and day <=  daysOfMonth();
+							 
+
+operations
+  public Date : nat1 * nat1 * nat1 ==> Date
+		Date(dayValue, monthValue, yearValue) == (
+			day := dayValue;
+			month := monthValue;
+			year := yearValue;
+			return self
+		)
+	pre dayValue > 0 and monthValue > 0 and yearValue > 0;
+
+ 	--calculates the days of the month given in the year given. Takes into account leap years.
+	pure public daysOfMonth: () ==> nat1
+		daysOfMonth() == 
+			if(month = 1 or month = 3 or month = 5 or month = 7 or month = 8 or month = 10 or month = 12)
+				then return 31
+			else if(month = 4 or month = 6 or month = 9 or month = 11)
+				then return 30
+			else if((year rem 4 = 0 and year rem 100 = 0 and year rem 400 = 0) or (year rem 4 = 0 and year rem 100 <> 0))
+				then return 29
+			else
+				return 28;
+		
+				
+		public pure getDay: () ==> nat1
+		getDay () ==
+			return day;
+			
+
+		public pure getMonth: () ==> nat1
+		getMonth () ==
+			return month;
+				
+				
+		public pure getYear: () ==> nat1
+		getYear () ==
+			return year;
+			
+		-- checks if a date given has the same month of the this date.
+		public isOfSameMonth: Date ==> bool
+			isOfSameMonth (anotherDate) ==
+			(
+				if(month = anotherDate.getMonth() and year = anotherDate.getYear())
+					then return true;
+
+					return false;
+			)
+		pre anotherDate <> undefined;
+				
+		-- checks if a date given is posterior has the same month of the this date	
+		public pure isHigher: Date ==> bool
+			isHigher (anotherDate) ==
+			(
+				if(year > anotherDate.getYear())
+					then return true;
+					
+				if(month > anotherDate.getMonth())
+					then return true;
+					
+				if(day > anotherDate.getDay())
+					then return true;
+
+					return false;
+			)
+		pre anotherDate <> undefined;	
+				
+end Date

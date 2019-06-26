@@ -1,0 +1,28 @@
+class Toy is subclass of Product
+	
+instance variables
+  toySize: int;
+  inv toySize > 0 and toySize <= 5;
+  
+operations
+    public Toy : seq of char * seq of char * real * real * seq of char * int ==> Toy
+		Toy(productName, productDescription, productbuyPrice, productSalePrice, productColor, toySizeValue) == (
+			id := currIdCounter;
+			currIdCounter := currIdCounter + 1;
+			name := productName;
+			description := productDescription;
+			buyPrice := productbuyPrice;
+			salePrice := productSalePrice;
+			color := productColor;
+			toySize := toySizeValue;
+			return self
+		)
+		pre (len productName) > 0 and (len productDescription) > 0 
+			and productSalePrice > productbuyPrice and (len productColor > 0);
+			
+			
+		public getToySize: () ==> int
+			getToySize() == 
+				return toySize;
+			
+end Toy

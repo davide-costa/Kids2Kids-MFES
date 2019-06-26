@@ -1,0 +1,126 @@
+class Store
+
+instance variables
+
+	static currIdCounter: int := 1;
+  id: int;
+  capacity: int;
+  location: seq of char;
+  employees: set of Employee := {};
+  products: set of Product := {};
+
+  inv  id > 0 and currIdCounter > 0 and capacity > 0 and (len location > 0) and (card getProductsInStock() <= capacity)
+
+  operations
+  public Store : int * seq of char ==> Store
+		Store(capacityValue, locationValue) == (
+			id := currIdCounter;
+			currIdCounter := currIdCounter + 1;
+			capacity := capacityValue;
+			location := locationValue;
+			return self
+		)
+  	pre capacityValue > 0 and (len locationValue) > 0;
+
+
+  public pure getEmployees: () ==> set of Employee
+		getEmployees () ==
+			return employees;
+		
+		
+	public addEmployeeByInstance: Employee ==> ()
+		addEmployeeByInstance (employee) ==
+			employees := employees union {employee}
+		pre employee <> undefined
+		post (card employees~ + 1) = card employees;
+			
+			
+	public getId: () ==> int
+		getId () ==
+			return id;
+			
+			
+	public getCapacity: () ==> int
+		getCapacity () ==
+			return capacity;
+			
+			
+	public getLocation: () ==> seq of char
+		getLocation () ==
+			return location;
+		
+	-- get all products of the store, both in stock and previous selled products	
+	public pure getProducts: () ==> set of Product
+		getProducts () ==
+			return products;
+		
+			
+	public pure getProductsInStock: () ==> set of Product
+		getProductsInStock () ==
+		(
+				dcl productsSet: set of Product := {};
+				for all product in set products do
+				(
+						 if(product.isOnStateOnStore())
+							then (productsSet := productsSet union {product});	
+				);
+			
+				return productsSet;
+		);
+	
+	
+	public getAllSoldProducts: () ==> set of Product
+		getAllSoldProducts () ==
+		(
+				dcl productsSet: set of Product := {};
+				for all product in set products do
+				(
+						 if(product.isOnStateSold())
+							then (productsSet := productsSet union {product});	
+				);
+			
+				return productsSet;
+		);
+	
+	-- checks if the store can handle new products based on the capacity and current number of products in stock
+	public pure canHandleNewProducts: set of Product ==> bool
+		canHandleNewProducts (setProducts) ==
+		(
+			dcl productsSetSize: int := card setProducts;
+			if((card getProductsInStock()) + productsSetSize > capacity)
+				then return false;
+		
+			return true;
+		)
+			pre setProducts <> undefined; 
+
+
+	public addEmployee: seq of char * seq of char * real * Date ==> Employee
+		addEmployee(name, nif, salary, employmentDate) == 
+		(
+			dcl employee: Employee := new Employee(name, nif, salary, employmentDate, self);
+			employees := employees union {employee};
+			
+			return employee;
+		)
+			pre ((len name) > 0) and((len nif) > 0) and salary > 0.0
+			post card employees~ + 1 = card employees;
+		
+			
+	public setProductsSetAsSold: set of Product ==> ()
+		setProductsSetAsSold (setProducts) ==
+		(
+			for all product in set setProducts do
+			(
+				product.setStateAsSold();	
+			);
+		)
+			pre setProducts <> undefined; 
+			
+			
+	public addProducts: set of Product ==> ()
+		addProducts (setProducts) ==
+			products := products union setProducts
+		pre setProducts <> undefined; 
+		
+end Store

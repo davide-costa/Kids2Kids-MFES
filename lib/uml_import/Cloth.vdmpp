@@ -1,0 +1,29 @@
+class Cloth is subclass of Product
+
+instance variables
+  age: int;
+	
+  inv age >= 0 and age < 18; --age of a cloth piece must be between 0 and 18 as the company targets kids
+  
+operations
+    public Cloth : seq of char * seq of char * real * real * seq of char * int ==> Cloth
+		Cloth(productName, productDescription, productbuyPrice, productSalePrice, productColor, ageValue) == (
+			id := currIdCounter;
+			currIdCounter := currIdCounter + 1;
+			name := productName;
+			description := productDescription;
+			buyPrice := productbuyPrice;
+			salePrice := productSalePrice;
+			color := productColor;
+			age := ageValue;
+			return self
+		)
+		pre (len productName) > 0 and (len productDescription) > 0 and productSalePrice > productbuyPrice 
+			and (len productColor > 0) and ageValue > 0 and ageValue < 18;
+			
+			
+		public getAge: () ==> int
+			getAge() == 
+				return age;
+
+end Cloth

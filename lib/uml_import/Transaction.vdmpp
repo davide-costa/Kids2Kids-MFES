@@ -1,0 +1,39 @@
+class Transaction
+	
+instance variables
+		protected static currIdCounter: int := 1;
+		protected id: int;
+  	protected transactionDate: Date;
+  	protected employee: Employee;
+  	protected customer: Person;
+  	protected store: Store;
+  	protected products: set of Product := {};
+  	protected totalValue: real := 0.0;
+
+	
+operations
+	 public getTotalValue: () ==> real
+		getTotalValue () ==
+			return totalValue;
+			
+	 public getNumberOfProducts: () ==> int
+		getNumberOfProducts () ==
+			return (card products);		
+			
+	public getProducts: () ==> set of Product
+		getProducts () ==
+			return products;
+			
+	public getStore: () ==> Store
+		getStore () ==
+			return store;
+			
+	public getDate: () ==> Date
+		 getDate () ==
+			return transactionDate;
+			
+	public getCustomer: () ==> Person
+		 getCustomer () ==
+			return customer;
+
+end Transaction

@@ -1,0 +1,40 @@
+class Person
+
+instance variables
+	protected static currIdCounter: int := 1;
+	protected id: int;
+	protected name: seq of char;
+ 	protected nif: seq of char;
+	protected discountsValue: real := 0.0;
+  
+  inv id > 0 and currIdCounter > 0 and discountsValue >= 0.0
+  
+  
+  operations
+    public getId: () ==> int
+		getId () ==
+			return id;
+			
+  	public getName: () ==> seq of char
+		getName () ==
+			return name;
+			
+	public pure getNIF: () ==> seq of char
+		getNIF () ==
+			return nif;
+			
+	public pure getDiscountsValue: () ==> real
+		getDiscountsValue () ==
+			return discountsValue;		
+			
+			
+	public incrementDiscountsValue: real ==> ()
+		incrementDiscountsValue(valueToAdd) == 
+			discountsValue := discountsValue + valueToAdd;
+
+	public decrementDiscountsValue: real ==> ()
+		decrementDiscountsValue(valueToSub) == 
+			discountsValue := discountsValue - valueToSub;
+
+
+end Person

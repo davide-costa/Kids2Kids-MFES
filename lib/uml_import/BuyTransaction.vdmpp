@@ -1,0 +1,31 @@
+class BuyTransaction is subclass of Transaction
+
+instance variables
+	inv id > 0 and currIdCounter > 0 and (card products > 0) and totalValue > 0.0 
+		and transactionDate.isHigher(employee.getEmploymentDate());
+		
+operations
+		 public BuyTransaction : Employee * Person * Store * set of Product * Date ==> BuyTransaction
+			BuyTransaction(employeeInstance, customerInstance, storeInstance, setProducts, date) == (
+				id := currIdCounter;
+				currIdCounter := currIdCounter + 1;
+				employee := employeeInstance;
+				customer := customerInstance;
+				store := storeInstance;
+				products := setProducts;
+				transactionDate := date;
+				calculateBuyValueOfProductsSet();
+				return self
+		)
+		pre employeeInstance <> undefined and customerInstance <> undefined and storeInstance <> undefined
+			and (card setProducts) > 0 and date <> undefined;
+	
+	--calculates the total price the kids2kids company has paid for the products of this Transaction
+ 	private calculateBuyValueOfProductsSet: () ==> ()
+		calculateBuyValueOfProductsSet() ==
+			(
+				for all product in set products
+					do (totalValue := totalValue + product.getBuyValue());
+			);
+			
+end BuyTransaction

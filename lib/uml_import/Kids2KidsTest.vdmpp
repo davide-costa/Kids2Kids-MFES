@@ -1,0 +1,524 @@
+class Kids2KidsTest
+	
+	instance variables
+        kids2kids : Kids2Kids := new Kids2Kids();
+        store1: Store;
+        store2: Store;
+        customer1: Customer;
+        customer2: Customer;
+        employee1EmploymentDate: Date;
+        employee2EmploymentDate: Date;
+        employee1: Employee;
+        employee2: Employee;
+        product1: Cloth;
+        product2: Toy;
+        product3: Gear;
+        buyTransaction1Date: Date;
+        buyTransaction2Date: Date;
+        buyTransaction3Date: Date;
+        buyTransaction4Date: Date;
+        buyTransaction1: BuyTransaction;
+        buyTransaction2: BuyTransaction;
+        buyTransaction3: BuyTransaction;
+        buyTransaction4: BuyTransaction;
+        saleTransaction1Date: Date;
+        saleTransaction2Date: Date;
+        saleTransaction3Date: Date;
+        saleTransaction4Date: Date;
+       	saleTransaction1: SaleTransaction;
+        saleTransaction2: SaleTransaction;
+        saleTransaction3: SaleTransaction;
+        saleTransaction4: SaleTransaction;
+                
+        operations
+        
+    public Kids2KidsTest: () ==> Kids2KidsTest
+		Kids2KidsTest() == (
+			return self
+		);
+	
+	
+    private assertTrue: bool ==> ()
+    assertTrue(cond) == return
+    pre cond;
+       
+					
+		public testCreateKids2Kids: () ==> ()
+		testCreateKids2Kids () ==
+		(
+				dcl kids2Kids2: Kids2Kids := new Kids2Kids();
+				assertTrue(card kids2Kids2.getStores() = 0);
+				assertTrue(card kids2Kids2.getBuyTransactions() = 0);
+				assertTrue(card kids2Kids2.getSaleTransactions() = 0);
+				assertTrue(card kids2Kids2.getCustomers() = 0);
+		);	
+				
+	public testAddStores: () ==> ()
+	testAddStores () ==
+		(
+			store1 := kids2kids.addStore(2, "Porto");
+			store2 := kids2kids.addStore(1, "Lisboa");
+			);
+		
+	public testGetStores: () ==> ()
+	testGetStores () ==
+		(
+			assertTrue((card kids2kids.getStores()) = 2);
+			assertTrue(kids2kids.getStores() = {store1, store2});
+		);
+				
+		
+	public testAddCustomers: () ==> ()
+	testAddCustomers () ==
+	(
+			customer1 := kids2kids.addCustomer("Customer1", "111111111");
+	customer2 := kids2kids.addCustomer("Customer2", "222222222");	
+	);
+	
+	public testAddCustomersThatFails: () ==> ()
+	testAddCustomersThatFails () ==
+	(
+			customer1 := kids2kids.addCustomer("", "111111111"); --empty name
+			customer2 := kids2kids.addCustomer("Customer2", "222222");	-- nif with less than 9 caracters
+			customer2 := kids2kids.addCustomer("Customer2", "111111111");	-- nif repeated
+	);
+	
+	public testGetCustomers: () ==> ()
+	testGetCustomers () ==
+	(
+			assertTrue((card kids2kids.getCustomers()) = 2);
+			assertTrue(kids2kids.getCustomers() \ {customer1, customer2} = {});
+	);
+	
+	
+	public testAddEmployees: () ==> ()
+	testAddEmployees () ==
+	(
+			employee1EmploymentDate  := new Date(2, 2, 2000);
+			employee1 := store1.addEmployee("Employee1", "333333333", 455.55, employee1EmploymentDate);
+			
+			employee2EmploymentDate:= new Date(2, 2, 2016);	
+			employee2 := new Employee("Employee2", "444444444", 555.55, employee2EmploymentDate, store2);
+			store2.addEmployeeByInstance(employee2);
+	);
+	
+	public testGetEmployees: () ==> ()
+	testGetEmployees () ==
+	(
+			dcl storesEmployees: set of Employee := {};
+			for all store in set kids2kids.getStores() do
+			(
+				assertTrue((card store.getEmployees()) = 1);
+				storesEmployees := storesEmployees union store.getEmployees();
+			);
+			
+			assertTrue(storesEmployees \ {employee1,employee2} = {});
+	);
+	
+
+	public testAddBuyTransactions: () ==> ()
+	testAddBuyTransactions () ==
+	(
+			product1 := new Cloth("Cloth1", "Cloth Product1", 3, 5, "red", 6);	
+			buyTransaction1Date := new Date(10, 2, 2000);
+			buyTransaction1 := kids2kids.addBuyTransaction(employee1, customer1, store1, {product1}, buyTransaction1Date);
+			
+			product2 := new Toy("Toy1", "Toy Product1", 3, 5, "blue", 2);
+			buyTransaction2Date := new Date(10, 09, 2018);
+			buyTransaction2 := kids2kids.addBuyTransaction(employee2, customer2, store2, {product2}, buyTransaction2Date);
+	);
+	
+	public testAddBuyTransactionsThatFails: () ==> ()
+	testAddBuyTransactionsThatFails () ==
+	(
+			--failed because store capacity has been exceed
+			dcl productToAdd4 : Product := new Cloth("Cloth1", "Cloth Product1", 10, 14, "red", 6);	
+			buyTransaction1Date := new Date(10, 2, 2000);
+			buyTransaction1 := kids2kids.addBuyTransaction(employee2, customer1, store2, {productToAdd4}, buyTransaction1Date);
+	);
+	
+	public testGetBuyTransactions: () ==> ()
+	testGetBuyTransactions () ==
+	(
+			assertTrue((card kids2kids.getBuyTransactions()) = 2);
+			assertTrue(kids2kids.getBuyTransactions() \ {buyTransaction1, buyTransaction2} = {});
+	);
+	
+	public testGetProducts: () ==> ()
+	testGetProducts () ==
+	(
+			dcl storesProducts: set of Product := {};
+			for all store in set kids2kids.getStores() do
+			(
+				assertTrue((card store.getProducts()) = 1);
+				storesProducts := storesProducts union store.getProducts();
+			);
+			
+			assertTrue(storesProducts \ {product1,product2} = {});
+	);
+	
+
+	  public addProduct3AndRespectiveBuyTransaction: () ==> ()
+		addProduct3AndRespectiveBuyTransaction () ==
+		(
+				product3 := new Gear("Gear1", "Gear Product1", 3, 5, "green");				
+				buyTransaction3Date := new Date(10, 02, 2018);
+				buyTransaction3 := kids2kids.addBuyTransaction(employee1, customer1, store1, {product3}, buyTransaction3Date);	
+		);
+ 
+    public addSalesTransactionForTheProduct1: () ==> ()
+		addSalesTransactionForTheProduct1 () ==
+		(
+				saleTransaction1Date := new Date(12, 10, 2018);
+				saleTransaction1 := kids2kids.addSaleTransaction(employee1, customer1, store1, {product1}, saleTransaction1Date, 0.0);
+		);
+
+    public addSalesTransactionForTheProduct2: () ==> ()
+		  addSalesTransactionForTheProduct2 () ==
+		(
+				saleTransaction2Date := new Date(13, 10, 2018);
+				saleTransaction2 := kids2kids.addSaleTransaction(employee2, customer2, store2, {product2}, saleTransaction2Date, 0.0);
+		);
+							
+    public addSalesTransactionForTheProduct3: () ==> ()
+		addSalesTransactionForTheProduct3 () ==
+		(
+				saleTransaction3Date := new Date(15, 10, 2018);
+				saleTransaction3 := kids2kids.addSaleTransaction(employee1, employee2, store1, {product3}, saleTransaction3Date, 0.0);
+		);																	
+							
+
+		public testGetProductsFromStores: () ==> ()
+		testGetProductsFromStores () ==
+		(
+			--test getAllProductsFromAllStores
+			assertTrue(kids2kids.getAllProductsFromAllStores() = {product1, product2, product3});
+			
+			--test getAllProductsSoldFromAllStores
+			assertTrue(kids2kids.getAllProductsSoldFromAllStores() = {product1});
+			
+			--test getAllProductsInStockFromAllStores
+			assertTrue(kids2kids.getAllProductsInStockFromAllStores() = {product2, product3});
+			
+		);
+		
+		
+	public testGetProductsInStockOfClassCloth: () ==> ()
+	testGetProductsInStockOfClassCloth () ==
+	(
+			assertTrue(kids2kids.getProductsInStockOfClassCloth() = {product1});
+			assertTrue(kids2kids.getAmountOfProductsInStockOfClassCloth() = 1);
+	);
+	
+	public testGetAllProductsOfClassCloth: () ==> ()
+	testGetAllProductsOfClassCloth () ==
+	(
+			assertTrue(kids2kids.getAllProductsOfClassCloth() = {product1});
+			assertTrue(kids2kids.getAmountOfAllProductsOfClassCloth() = 1);
+	);
+	
+	public testGetSoldProductsOfClassCloth: () ==> ()
+	testGetSoldProductsOfClassCloth () ==
+	(
+			assertTrue(kids2kids.getSoldProductsOfClassCloth() = {product1});
+			assertTrue(kids2kids.getAmountOfSoldProductsOfClassCloth() = 1);
+	);								
+
+	public testGetProductsInStockOfClassToy: () ==> ()
+	testGetProductsInStockOfClassToy () ==
+	(
+			assertTrue(kids2kids.getProductsInStockOfClassToy() = {product2});
+			assertTrue(kids2kids.getAmountOfProductsInStockOfClassToy() = 1);
+	);
+	
+	public testGetAllProductsOfClassToy: () ==> ()
+	testGetAllProductsOfClassToy () ==
+	(
+			assertTrue(kids2kids.getAllProductsOfClassToy() = {product2});
+			assertTrue(kids2kids.getAmountOfAllProductsOfClassToy() = 1);
+	);
+	
+	public testGetSoldProductsOfClassToy: () ==> ()
+	testGetSoldProductsOfClassToy () ==
+	(
+			assertTrue(kids2kids.getSoldProductsOfClassToy() = {product2});
+			assertTrue(kids2kids.getAmountOfSoldProductsOfClassToy() = 1);
+	);								
+				
+	public testGetProductsInStockOfClassGear: () ==> ()
+	testGetProductsInStockOfClassGear () ==
+	(					
+			assertTrue(kids2kids.getProductsInStockOfClassGear() = {product3});
+			assertTrue(kids2kids.getAmountOfProductsInStockOfClassGear() = 1);
+	);
+	
+	public testGetAllProductsOfClassGear: () ==> ()
+	testGetAllProductsOfClassGear () ==
+	(
+			assertTrue(kids2kids.getAllProductsOfClassGear() = {product3});
+			assertTrue(kids2kids.getAmountOfAllProductsOfClassGear() = 1);
+	);
+	
+	public testGetSoldProductsOfClassGear: () ==> ()
+	testGetSoldProductsOfClassGear () ==
+	(
+			assertTrue(kids2kids.getSoldProductsOfClassGear() = {product3});
+			assertTrue(kids2kids.getAmountOfSoldProductsOfClassGear() = 1);
+	);	
+	
+	
+	public testGetBestStoreOfMonthBySalesVolume: () ==> ()
+	testGetBestStoreOfMonthBySalesVolume () ==
+	(
+			assertTrue(kids2kids.getBestStoreOfMonthBySalesVolume(10, 2018) = {store1});
+	);								
+
+	public testGetBestStoreOfMonthBySalesValue: () ==> ()
+	testGetBestStoreOfMonthBySalesValue () ==
+	(
+			assertTrue(kids2kids.getBestStoreOfMonthBySalesValue(10, 2018) = {store1});
+	);	
+	
+										
+	public testGetMostSoldProductClass: seq of char ==> ()
+	testGetMostSoldProductClass (expectedString) ==
+	(
+			assertTrue(kids2kids.getMostSoldProductClass() = expectedString);
+	);	
+	
+	
+	public testIsOfSameMonthFromDateClass: () ==> ()
+	testIsOfSameMonthFromDateClass () ==
+	(
+			dcl date1ForMonthTest : Date := new Date(10, 10, 2018);
+			dcl date2ForMonthTestEqual : Date := new Date(11, 10, 2018);
+			dcl date3MonthDifferent : Date := new Date(10, 9, 2018);
+													
+			assertTrue(date1ForMonthTest.isOfSameMonth(date2ForMonthTestEqual));
+			assertTrue(date1ForMonthTest.isOfSameMonth(date3MonthDifferent) = false);
+	);	
+		
+	public testIsHigherFromDateClass: () ==> ()
+	testIsHigherFromDateClass () ==
+	(
+			dcl date1ForHigherTest : Date := new Date(10, 10, 2018);
+			dcl date2HigherForHigherTest : Date := new Date(10, 11, 2018);
+													
+			assertTrue(date2HigherForHigherTest.isHigher(date1ForHigherTest));
+			assertTrue(date1ForHigherTest.isHigher(date2HigherForHigherTest) = false);
+	);											
+	
+	
+	public testIsNifAlreadyExistent: () ==> ()
+	testIsNifAlreadyExistent () ==
+	(							
+			assertTrue(kids2kids.IsNifAlreadyExistent("111111111"));
+			assertTrue(kids2kids.IsNifAlreadyExistent("111111115") = false);
+	);												
+	
+	
+	public testCheckAllProductsHaveOnStoreState: () ==> ()
+	testCheckAllProductsHaveOnStoreState () ==
+	(							
+			assertTrue(kids2kids.checkAllProductsHaveOnStoreState({product3}));
+			assertTrue(kids2kids.checkAllProductsHaveOnStoreState({product3, product2}) = false); --product2 is on state Sold
+	);												
+	
+	public testCheckAllProductsHaveSoldState: () ==> ()
+	testCheckAllProductsHaveSoldState () ==
+	(							
+			assertTrue(kids2kids.checkAllProductsHaveSoldState({product2}));
+			assertTrue(kids2kids.checkAllProductsHaveSoldState({product3, product2}) = false); --product3 is on state OnStore
+	);	
+	
+	
+	public testCanHandleNewProducts: () ==> ()
+	testCanHandleNewProducts () ==
+	(							
+			assertTrue(store1.canHandleNewProducts({product2, product1}));
+			assertTrue(store2.canHandleNewProducts({product2, product1}) = false);
+	);		
+	
+	
+	public addNewProductAndSaleTransactionToStore2: () ==> ()
+	addNewProductAndSaleTransactionToStore2 () ==
+	(
+			buyTransaction4Date := new Date(10, 10, 2018);
+			saleTransaction4Date := new Date(15, 10, 2018);
+			buyTransaction4 := kids2kids.addBuyTransaction(employee2, employee2, store2, {product2}, buyTransaction4Date);
+			saleTransaction4 := kids2kids.addSaleTransaction(employee2, customer2, store2, {product2}, saleTransaction4Date, 0.0);
+	);	
+	
+	public testGetBestStoreOfMonthBySalesVolumeForStoresEqual: () ==> ()
+	testGetBestStoreOfMonthBySalesVolumeForStoresEqual () ==
+	(
+			assertTrue(kids2kids.getBestStoreOfMonthBySalesVolume(10, 2018) = {store1, store2});
+	);								
+
+	public testGetBestStoreOfMonthBySalesValueForStoresEqual: () ==> ()
+	testGetBestStoreOfMonthBySalesValueForStoresEqual () ==
+	(
+			assertTrue(kids2kids.getBestStoreOfMonthBySalesValue(10, 2018) = {store1, store2});
+	);							
+	
+	public testGetsFromStore: () ==> ()
+	testGetsFromStore () ==
+	(
+			assertTrue(store1.getId() = 1);
+			assertTrue(store2.getId() = 2);
+			
+			assertTrue(store1.getLocation() = "Porto");
+			assertTrue(store2.getLocation() = "Lisboa");
+			
+			assertTrue(store1.getCapacity() = 2);
+			assertTrue(store2.getCapacity() = 1);
+	);	
+	
+	
+	public testGetsFromProduct: () ==> ()
+	testGetsFromProduct () ==
+	(
+			assertTrue(product1.getId() = 1);
+			assertTrue(product2.getId() = 2);
+			
+			assertTrue(product1.getName() = "Cloth1");
+			assertTrue(product2.getName() = "Toy1");
+			
+			assertTrue(product1.getDescription() = "Cloth Product1");
+			assertTrue(product2.getDescription() = "Toy Product1");
+			
+			assertTrue(product1.getColor() = "red");
+			assertTrue(product2.getColor() = "blue");
+	);	
+	
+	
+	public testGetsFromCloth: () ==> ()
+	testGetsFromCloth () ==
+	(
+			assertTrue(product1.getId() = 1);
+			assertTrue(product1.getName() = "Cloth1");
+			assertTrue(product1.getDescription() = "Cloth Product1");
+			assertTrue(product1.getColor() = "red");
+			assertTrue(product1.getAge() = 6);
+	);	
+	
+	public testGetsFromToy: () ==> ()
+	testGetsFromToy () ==
+	(
+			assertTrue(product2.getId() = 2);
+			assertTrue(product2.getName() = "Toy1");
+			assertTrue(product2.getDescription() = "Toy Product1");
+			assertTrue(product2.getColor() = "blue");
+			assertTrue(product2.getToySize() = 2);
+	);	
+							
+
+	public testGetsFromPerson: () ==> ()
+	testGetsFromPerson () ==
+	(
+			assertTrue(customer1.getId() = 1);
+			assertTrue(customer1.getName() = "Customer1");
+			assertTrue(customer1.getNIF() = "111111111");
+			assertTrue(customer1.getDiscountsValue() = 6.0);
+			
+			assertTrue(customer2.getId() = 2);
+			assertTrue(customer2.getName() = "Customer2");
+			assertTrue(customer2.getNIF() = "222222222");
+			assertTrue(customer2.getDiscountsValue() = 3.0);
+	);	
+	
+	public testGetsFromEmployee: () ==> ()
+	testGetsFromEmployee () ==
+	(
+			assertTrue(employee1.getId() = 3);
+			assertTrue(employee1.getName() = "Employee1");
+			assertTrue(employee1.getNIF() = "333333333");
+			assertTrue(employee1.getDiscountsValue() = 0.0);
+			assertTrue(employee1.getSalary() = 455.55);
+			assertTrue(employee1.getEmploymentDate() = employee1EmploymentDate);
+	);	
+		
+											
+	public testGetEmployeesThatAreAlsoCustomers: () ==> ()
+	testGetEmployeesThatAreAlsoCustomers () ==
+	(
+			assertTrue(card kids2kids.getEmployeesThatAreAlsoCustomers() = 1);
+			assertTrue(kids2kids.getEmployeesThatAreAlsoCustomers() = {employee2});
+	);					
+
+
+
+  public static main: () ==> ()
+  main() ==
+  (
+		 dcl kids2KidsTest: Kids2KidsTest := new Kids2KidsTest();
+		 
+		 kids2KidsTest.testCreateKids2Kids();
+		 
+		 kids2KidsTest.testAddStores(); -- Requirement R1
+		 kids2KidsTest.testGetStores(); -- Requirements R6 and R7
+		 
+		 kids2KidsTest.testAddCustomers(); -- Requirement R3
+		 --kids2KidsTest.testAddCustomersThatFails();
+		 kids2KidsTest.testGetCustomers(); -- Requirements R6 and R7
+		 
+		 kids2KidsTest.testAddEmployees(); -- Requirement R2
+		 kids2KidsTest.testGetEmployees(); -- Requirements R6 and R7
+		                    
+		 kids2KidsTest.testAddBuyTransactions(); -- Requirement R4
+		 --kids2KidsTest.testAddBuyTransactionsThatFails();
+		 kids2KidsTest.testGetBuyTransactions(); -- Requirements R6 and R7
+		 kids2KidsTest.testGetProducts(); -- Requirements R6 and R7
+		 
+		 
+		 kids2KidsTest.testGetProductsInStockOfClassCloth(); -- Requirements R6 and R7
+		 kids2KidsTest.testGetAllProductsOfClassCloth(); -- Requirements R6 and R7
+		 kids2KidsTest.testGetProductsInStockOfClassToy(); -- Requirements R6 and R7
+		 kids2KidsTest.testGetAllProductsOfClassToy(); -- Requirements R6 and R7
+		 kids2KidsTest.addProduct3AndRespectiveBuyTransaction();
+		 kids2KidsTest.testGetProductsInStockOfClassGear(); -- Requirements R6 and R7
+		 kids2KidsTest.testGetAllProductsOfClassGear(); -- Requirements R6 and R7
+		 kids2KidsTest.testGetMostSoldProductClass("Cloth, Toys and Gear"); -- Requirements R6 and R7
+		 kids2KidsTest.addSalesTransactionForTheProduct1(); -- Requirement R5
+		 kids2KidsTest.testGetProductsFromStores(); -- Requirements R6 and R7
+		 kids2KidsTest.testGetMostSoldProductClass("Cloth"); -- Requirements R6 and R7
+		 kids2KidsTest.addSalesTransactionForTheProduct2();  -- Requirement R5
+		 kids2KidsTest.testGetMostSoldProductClass("Cloth and Toys"); -- Requirements R6 and R7
+		 kids2KidsTest.testCheckAllProductsHaveOnStoreState();
+		 kids2KidsTest.testCheckAllProductsHaveSoldState();
+		 kids2KidsTest.addSalesTransactionForTheProduct3();  -- Requirement R5
+		 kids2KidsTest.testGetMostSoldProductClass("Cloth, Toys and Gear"); -- Requirements R6 and R7
+		 kids2KidsTest.testGetSoldProductsOfClassCloth(); -- Requirements R6 and R7
+		 kids2KidsTest.testGetSoldProductsOfClassToy(); -- Requirements R6 and R7
+		 kids2KidsTest.testGetSoldProductsOfClassGear(); -- Requirements R6 and R7
+		 
+		 kids2KidsTest.testGetBestStoreOfMonthBySalesVolume(); -- Requirements R6 and R7
+		 kids2KidsTest.testGetBestStoreOfMonthBySalesValue(); -- Requirements R6 and R7
+		 
+		 kids2KidsTest.testIsOfSameMonthFromDateClass();
+		 kids2KidsTest.testIsHigherFromDateClass();
+		
+		 kids2KidsTest.testIsNifAlreadyExistent();
+		 
+		 kids2KidsTest.testCanHandleNewProducts();
+		 
+		 kids2KidsTest.addNewProductAndSaleTransactionToStore2(); -- Requirement R5
+		 -- now after adding new products for making two stores equal
+		 kids2KidsTest.testGetBestStoreOfMonthBySalesVolumeForStoresEqual(); -- Requirements R6 and R7
+		 kids2KidsTest.testGetBestStoreOfMonthBySalesValueForStoresEqual(); -- Requirements R6 and R7
+		 
+		 kids2KidsTest.testGetMostSoldProductClass("Toy"); -- Requirements R6 and R7
+									
+		 kids2KidsTest.testGetCustomers(); -- Requirements R6 and R7
+		 		
+		 kids2KidsTest.testGetsFromStore();
+		 kids2KidsTest.testGetsFromProduct();
+		 kids2KidsTest.testGetsFromCloth();
+		 kids2KidsTest.testGetsFromToy();
+		 kids2KidsTest.testGetsFromPerson();
+		 kids2KidsTest.testGetsFromEmployee();
+		 kids2KidsTest.testGetEmployeesThatAreAlsoCustomers(); -- Requirements R6 and R7
+
+    );
+
+end Kids2KidsTest
